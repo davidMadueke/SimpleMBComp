@@ -22,6 +22,17 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
                        )
 #endif
 {
+    threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
+    jassert(threshold != nullptr);
+    
+    attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
+    jassert(attack != nullptr);
+    
+    release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
+    jassert(release != nullptr);
+    
+    ratio = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("Ratio"));
+    jassert(ratio != nullptr);
 }
 
 SimpleMBCompAudioProcessor::~SimpleMBCompAudioProcessor()
@@ -95,6 +106,12 @@ void SimpleMBCompAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    juce::dsp::ProcessSpec spec;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+    spec.sampleRate = sampleRate;
+    
+    compressor.prepare(spec);
 }
 
 void SimpleMBCompAudioProcessor::releaseResources()
@@ -143,19 +160,17 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+    
+    compressor.setAttack(attack->get());
+    compressor.setRelease(release->get());
+    compressor.setThreshold(threshold->get());
+    compressor.setRatio(ratio->getCurrentChoiceName().getFloatValue());
+    
+    auto block = juce::dsp::AudioBlock<float>(buffer);
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
+    
+    compressor.process(context);
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
 }
 
 //==============================================================================
@@ -166,7 +181,8 @@ bool SimpleMBCompAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* SimpleMBCompAudioProcessor::createEditor()
 {
-    return new SimpleMBCompAudioProcessorEditor (*this);
+    //return new SimpleMBCompAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -175,14 +191,46 @@ void SimpleMBCompAudioProcessor::getStateInformation (juce::MemoryBlock& destDat
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    
+    juce::MemoryOutputStream MemoryOutputStream(destData, true);
+    apvts.state.writeToStream(MemoryOutputStream);
 }
 
 void SimpleMBCompAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if( tree.isValid() )
+    {
+        apvts.replaceState(tree);
+    }
 }
 
+juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::createParameterLayout(){
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ "Threshold", 1}, "Threshold", juce::NormalisableRange<float>(-60, +12, 1, 1), 0)); // Set the threshold parameter with a minimal value of -60dB, a maximal value of +12dB, and interval and skew value of 1
+    auto attackReleaseRange =  juce::NormalisableRange<float>(5, 500, 1, 1); // Set the attack Release range to a minimal time of 5ms and maximal range of 500ms with a linear step with a skew factor 1
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ "Attack", 1}, "Attack", attackReleaseRange, 50));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ "Release", 1}, "Release", attackReleaseRange, 250));
+    
+    auto ratioChoices = std::vector<double>{1, 1.5, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20, 50, 100};
+    
+    juce::StringArray sa;
+    for(auto choice: ratioChoices)
+    {
+        sa.add( juce::String(choice, 1) );
+    };
+    
+    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{ "Ratio", 1},
+                                                            "Ratio",
+                                                            sa,
+                                                            3));
+    
+    return layout;
+}
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
