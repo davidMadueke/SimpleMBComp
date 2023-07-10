@@ -1,12 +1,13 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #pragma once
+
+/*
+ The DSP roadmap:
+ 1) Split the incoming audio into three bands
+ 2) Create parameters for crossover frequencies
+ 3) Process each band using Compressor Band struct
+ 4) Add Mute, Solo and Bypass Functionality for each band
+ 5) Recombine the three signals into one
+ */
 
 #include <JuceHeader.h>
 

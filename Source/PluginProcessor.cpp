@@ -22,20 +22,37 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
                        )
 #endif
 {
-    compressorband.threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
-    jassert(compressorband.threshold != nullptr);
+    using namespace Params;
+    const auto& params = GetParams();
     
-    compressorband.attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
-    jassert(compressorband.attack != nullptr);
+    //floatHelper lambda function
+    auto floatHelper = [&apvts = this->apvts, &params](auto& parameter, const auto& parameterName)
+    {
+        parameter = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(params.at(parameterName)));
+        jassert(parameter != nullptr);
+    };
+
+    //choiceHelper Lambda
+    auto choiceHelper = [&apvts = this->apvts, &params](auto& parameter, const auto& parameterName)
+    {
+        parameter = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(params.at(parameterName)));
+        jassert(parameter != nullptr);
+    };
     
-    compressorband.release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
-    jassert(compressorband.release != nullptr);
+    //boolHelper Lambda
+    auto boolHelper = [&apvts = this->apvts, &params](auto& parameter, const auto& parameterName)
+    {
+        parameter = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter(params.at(parameterName)));
+        jassert(parameter != nullptr);
+    };
     
-    compressorband.ratio = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("Ratio"));
-    jassert(compressorband.ratio != nullptr);
     
-    compressorband.bypass = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Bypass"));
-    jassert(compressorband.bypass != nullptr);
+    floatHelper(compressorband.attack, Names::Attack_Low_Band);
+    floatHelper(compressorband.release, Names::Release_Low_Band);
+    floatHelper(compressorband.threshold, Names::Threshold_Low_Band);
+    choiceHelper(compressorband.ratio, Names::Ratio_Low_Band);
+    boolHelper(compressorband.bypass, Names::Bypass_Low_Band);
+
 }
 
 SimpleMBCompAudioProcessor::~SimpleMBCompAudioProcessor()
