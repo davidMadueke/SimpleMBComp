@@ -15,65 +15,6 @@
 /**
 */
 
-namespace Params {
-    
-enum Names{
-    
-    Low_Mid_Crossover_Freq,
-    Mid_High_Crossover_Freq,
-
-    Threshold_Low_Band,
-    Threshold_Mid_Band,
-    Threshold_High_Band,
-    
-    Attack_Low_Band,
-    Attack_Mid_Band,
-    Attack_High_Band,
-    
-    Release_Low_Band,
-    Release_Mid_Band,
-    Release_High_Band,
-    
-    Ratio_Low_Band,
-    Ratio_Mid_Band,
-    Ratio_High_Band,
-    
-    Bypass_Low_Band,
-    Bypass_Mid_Band,
-    Bypass_High_Band,
-    
-};
-
-inline const std::map<Names, juce::String>& GetParams()
-{
-    static std::map<Names, juce::String> params =
-    {
-        {Low_Mid_Crossover_Freq, "Low-Mid Crossover Freq"},
-        {Mid_High_Crossover_Freq, "Mid-High Crossover Freq"},
-        
-        {Threshold_Low_Band, "Threshold Low Band"},
-        {Threshold_Mid_Band, "Threshold Mid Band"},
-        {Threshold_High_Band, "Threshold High Band"},
-        
-        {Attack_Low_Band, "Attack Low Band"},
-        {Attack_Mid_Band, "Attack Mid Band"},
-        {Attack_High_Band, "Attack High Band"},
-        
-        {Release_Low_Band, "Release Low Band"},
-        {Release_Mid_Band, "Release Mid Band"},
-        {Release_High_Band, "Release High Band"},
-        
-        {Ratio_Low_Band, "Ratio Low Band"},
-        {Ratio_Mid_Band, "Ratio Mid Band"},
-        {Ratio_High_Band, "Ratio High Band"},
-        
-        {Bypass_Low_Band, "Bypass Low Band"},
-        {Bypass_Mid_Band, "Bypass Mid Band"},
-        {Bypass_High_Band, "Bypass High Band"},
-    };
-    return params;
-}
-};
 
 
 //Define a compressor Band struct
@@ -120,6 +61,57 @@ class SimpleMBCompAudioProcessor  : public juce::AudioProcessor
                             #endif
 {
 public:
+    inline static const juce::String
+    
+            LOW_MID_CROSSOVER_FREQ_NAME = "Low-Mid Crossover Freq",
+            MID_HIGH_CROSSOVER_FREQ_NAME = "Mid-High Crossover Freq",
+            
+            THRESHOLD_LOW_BAND_NAME = "Threshold Low Band",
+            THRESHOLD_MID_BAND_NAME = "Threshold Mid Band",
+            THRESHOLD_HIGH_BAND_NAME = "Threshold High Band",
+            
+            ATTACK_LOW_BAND_NAME = "Attack Low Band",
+            ATTACK_MID_BAND_NAME = "Attack Mid Band",
+            ATTACK_HIGH_BAND_NAME = "Attack High Band",
+            
+            RELEASE_LOW_BAND_NAME = "Release Low Band",
+            RELEASE_MID_BAND_NAME = "Release Mid Band",
+            RELEASE_HIGH_BAND_NAME = "Release High Band",
+            
+            RATIO_LOW_BAND_NAME = "Ratio Low Band",
+            RATIO_MID_BAND_NAME = "Ratio Mid Band",
+            RATIO_HIGH_BAND_NAME = "Ratio High Band",
+            
+            BYPASS_LOW_BAND_NAME = "Bypass Low Band",
+            BYPASS_MID_BAND_NAME = "Bypass Mid Band",
+            BYPASS_HIGH_BAND_NAME = "Bypass High Band"
+    ;
+
+
+    inline static const juce::ParameterID
+            LOW_MID_CROSSOVER_FREQ_ID = {"Low_Mid_Crossover_Freq",1},
+            MID_HIGH_CROSSOVER_FREQ_ID = {"Mid-High Crossover Freq",1},
+            
+            THRESHOLD_LOW_BAND_ID ={"Threshold_Low_Band",1},
+            THRESHOLD_MID_BAND_ID= {"Threshold_Mid_Band",1},
+            THRESHOLD_HIGH_BAND_ID= {"Threshold_High_Band",1},
+            
+            ATTACK_LOW_BAND_ID= {"Attack_Low_Band", 1},
+            ATTACK_MID_BAND_ID= {"Attack_Mid_Band",1},
+            ATTACK_HIGH_BAND_ID= {"Attack_High_Band",1},
+            
+            RELEASE_LOW_BAND_ID= {"Release_Low_Band",1},
+            RELEASE_MID_BAND_ID= {"Release_Mid_Band",1},
+            RELEASE_HIGH_BAND_ID= {"Release_High_Band", 1},
+            
+            RATIO_LOW_BAND_ID= {"Ratio_Low_Band", 1},
+            RATIO_MID_BAND_ID= {"Ratio_Mid_Band", 1},
+            RATIO_HIGH_BAND_ID= {"Ratio_High_Band", 1},
+            
+            BYPASS_LOW_BAND_ID= {"Bypass_Low_Band", 1},
+            BYPASS_MID_BAND_ID= {"Bypass_Mid_Band",1},
+            BYPASS_HIGH_BAND_ID= {"Bypass_High_Band", 1}
+       ;
     //==============================================================================
     SimpleMBCompAudioProcessor();
     ~SimpleMBCompAudioProcessor() override;
