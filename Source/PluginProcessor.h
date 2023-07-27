@@ -154,6 +154,7 @@ public:
     
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, "Parameters", createParameterLayout()};
 private:
+    //inline static juce::StringArray parameterList;
     
     CompressorBand compressorband;
     //==============================================================================
