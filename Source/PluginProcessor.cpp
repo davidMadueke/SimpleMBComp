@@ -19,39 +19,41 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), apvts(*this, nullptr, "Parameters", createParameterLayout())
 #endif
 {
-    using namespace Params;
-    const auto& params = GetParams();
     
     //floatHelper lambda function
-    auto floatHelper = [&apvts = this->apvts, &params](auto& parameter, const auto& parameterName)
+    auto floatHelper = [&apvts = this->apvts](auto& parameter, const auto& parameterName)
     {
-        parameter = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(params.at(parameterName)));
+        parameter = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(parameterName));
         jassert(parameter != nullptr);
     };
 
     //choiceHelper Lambda
-    auto choiceHelper = [&apvts = this->apvts, &params](auto& parameter, const auto& parameterName)
+    auto choiceHelper = [&apvts = this->apvts](auto& parameter, const auto& parameterName)
     {
-        parameter = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(params.at(parameterName)));
+       parameter = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(parameterName));
         jassert(parameter != nullptr);
     };
-    
+
     //boolHelper Lambda
-    auto boolHelper = [&apvts = this->apvts, &params](auto& parameter, const auto& parameterName)
+    auto boolHelper = [&apvts = this->apvts](auto& parameter, const auto& parameterName)
     {
-        parameter = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter(params.at(parameterName)));
+        parameter = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter(parameterName));
         jassert(parameter != nullptr);
     };
+
+    // Using the parameterList StringArray, apply the float helper functions
+
+    //Compressor Low Band
+    floatHelper(compressorband.attack, SimpleMBCompAudioProcessor::ATTACK_LOW_BAND_ID.getParamID() );
+    floatHelper(compressorband.release, SimpleMBCompAudioProcessor::RELEASE_LOW_BAND_ID.getParamID() );
+    floatHelper(compressorband.threshold, SimpleMBCompAudioProcessor::THRESHOLD_LOW_BAND_ID.getParamID() );
     
+    choiceHelper(compressorband.ratio, SimpleMBCompAudioProcessor::RATIO_LOW_BAND_ID.getParamID() );
     
-    floatHelper(compressorband.attack, Names::Attack_Low_Band);
-    floatHelper(compressorband.release, Names::Release_Low_Band);
-    floatHelper(compressorband.threshold, Names::Threshold_Low_Band);
-    choiceHelper(compressorband.ratio, Names::Ratio_Low_Band);
-    boolHelper(compressorband.bypass, Names::Bypass_Low_Band);
+    boolHelper(compressorband.bypass, SimpleMBCompAudioProcessor::BYPASS_LOW_BAND_ID.getParamID() );
 
 }
 
