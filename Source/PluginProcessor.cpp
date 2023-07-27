@@ -184,6 +184,7 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         buffer.clear (i, 0, buffer.getNumSamples());
     
     compressorband.updateCompressorSettings();
+    compressorband.process(buffer);
 
 }
 
