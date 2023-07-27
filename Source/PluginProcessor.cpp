@@ -221,31 +221,36 @@ void SimpleMBCompAudioProcessor::setStateInformation (const void* data, int size
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::createParameterLayout(){
-    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+//    juce::AudioProcessorValueTreeState::ParameterLayout layout;
     
-    using namespace Params;
-    const auto& params = GetParams();
+
     
-    
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ params.at(Names::Threshold_Low_Band), 1}, params.at(Names::Threshold_Low_Band), juce::NormalisableRange<float>(-60, +12, 1, 1), 0)); // Set the threshold parameter with a minimal value of -60dB, a maximal value of +12dB, and interval and skew value of 1
-    
+    // Create a std::vector with a ranged audio parameter template and add all of the unique pointers to it
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> vecParams;
+
     auto attackReleaseRange =  juce::NormalisableRange<float>(5, 500, 1, 1); // Set the attack Release range to a minimal time of 5ms and maximal range of 500ms with a linear step with a skew factor 1
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ params.at(Names::Attack_Low_Band), 1}, params.at(Names::Attack_Low_Band), attackReleaseRange, 50));
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ params.at(Names::Release_Low_Band), 1}, params.at(Names::Release_Low_Band), attackReleaseRange, 250));
-    
+
     auto ratioChoices = std::vector<double>{1, 1.5, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20, 50, 100};
-    
     juce::StringArray sa;
     for(auto choice: ratioChoices)
     {
         sa.add( juce::String(choice, 1) );
     };
-    
-    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{ params.at(Names::Ratio_Low_Band), 1}, params.at(Names::Ratio_Low_Band), sa, 3));
-    
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{ params.at(Names::Bypass_Low_Band), 1}, params.at(Names::Bypass_Low_Band), false));
-    
-    return layout;
+
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_LOW_BAND_ID, THRESHOLD_LOW_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_LOW_BAND_ID, ATTACK_LOW_BAND_NAME, attackReleaseRange, 0));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(RELEASE_LOW_BAND_ID, RELEASE_LOW_BAND_NAME, attackReleaseRange, 0));
+    vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_LOW_BAND_ID, RATIO_LOW_BAND_NAME, sa, 3));
+    vecParams.push_back(std::make_unique<juce::AudioParameterBool>( BYPASS_LOW_BAND_ID, BYPASS_LOW_BAND_NAME, false));
+//
+//    // Loop over this vector and add the resp. parameterIDs to the parameterlist stringArray
+//    for (const auto& param : vecParams){
+//        parameterList.add(param->getParameterID());
+//    }
+
+
+    return {vecParams.begin(), vecParams.end()};
+
 }
 //==============================================================================
 // This creates new instances of the plugin..
