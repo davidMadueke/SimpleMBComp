@@ -219,7 +219,7 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     auto midHighCutoff = midHighCrossover->get();
     
     LP1.setCutoffFrequency(lowMidCutoff);
-    AP2.setCutoffFrequency(lowMidCutoff);
+    AP2.setCutoffFrequency(midHighCutoff);
     
     HP1.setCutoffFrequency(lowMidCutoff);
     LP2.setCutoffFrequency(midHighCutoff);

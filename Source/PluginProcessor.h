@@ -160,7 +160,7 @@ private:
     
     using Filter = juce::dsp::LinkwitzRileyFilter<float>;
     
-    Filter LP1, AP2,    // Set LP1 and AP2 to LowMidCutoff
+    Filter LP1, AP2,    // Set LP1 to LowMidCutoff and AP2 to MidHighCutoff
             HP1, LP2, //Set HP1 to LowMidCutoff
                 HP2;    // Set HP2 and LP2 to MidHighCutoff
     
