@@ -160,11 +160,15 @@ private:
     
     using Filter = juce::dsp::LinkwitzRileyFilter<float>;
     
-    Filter LP, HP;
+    Filter LP1, AP2,    // Set LP1 and AP2 to LowMidCutoff
+            HP1, LP2, //Set HP1 to LowMidCutoff
+                HP2;    // Set HP2 and LP2 to MidHighCutoff
     
-    juce::AudioParameterFloat* lowCrossover { nullptr };
+    juce::AudioParameterFloat* lowMidCrossover { nullptr };
     
-    std::array<juce::AudioBuffer<float>,2> filterBuffers;
+    juce::AudioParameterFloat* midHighCrossover { nullptr };
+    
+    std::array<juce::AudioBuffer<float>,3> filterBuffers;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleMBCompAudioProcessor)

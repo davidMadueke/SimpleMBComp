@@ -47,10 +47,15 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
     // Using the parameterList StringArray, apply the float helper functions
 
     //Crossover Frequencies
-    floatHelper(lowCrossover, SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID.getParamID() );
+    floatHelper(lowMidCrossover, SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID.getParamID() );
+    floatHelper(midHighCrossover, SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID.getParamID() );
     
-    LP.setType(juce::dsp::LinkwitzRileyFilterType::lowpass);
-    HP.setType(juce::dsp::LinkwitzRileyFilterType::highpass);
+    LP1.setType(juce::dsp::LinkwitzRileyFilterType::lowpass);
+    AP2.setType(juce::dsp::LinkwitzRileyFilterType::allpass);
+    
+    HP1.setType(juce::dsp::LinkwitzRileyFilterType::highpass);
+    LP2.setType(juce::dsp::LinkwitzRileyFilterType::lowpass);
+    HP2.setType(juce::dsp::LinkwitzRileyFilterType::highpass);
     
     //Compressor Low Band
     floatHelper(compressorband.attack, SimpleMBCompAudioProcessor::ATTACK_LOW_BAND_ID.getParamID() );
@@ -142,8 +147,11 @@ void SimpleMBCompAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     spec.sampleRate = sampleRate;
     
     compressorband.prepare(spec);
-    LP.prepare(spec);
-    HP.prepare(spec);
+    LP1.prepare(spec);
+    HP1.prepare(spec);
+    LP2.prepare(spec);
+    HP2.prepare(spec);
+    AP2.prepare(spec);
     
     for( auto& buffer : filterBuffers)
     {
@@ -207,24 +215,40 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         
     }
     
-    auto cutoff = lowCrossover->get();
-    LP.setCutoffFrequency(cutoff);
-    HP.setCutoffFrequency(cutoff);
+    auto lowMidCutoff = lowMidCrossover->get();
+    auto midHighCutoff = midHighCrossover->get();
+    
+    LP1.setCutoffFrequency(lowMidCutoff);
+    AP2.setCutoffFrequency(lowMidCutoff);
+    
+    HP1.setCutoffFrequency(lowMidCutoff);
+    LP2.setCutoffFrequency(midHighCutoff);
+    HP2.setCutoffFrequency(midHighCutoff);
     
     auto fb0Block = juce::dsp::AudioBlock<float>(filterBuffers[0]);
     auto fb1Block = juce::dsp::AudioBlock<float>(filterBuffers[1]);
+    auto fb2Block = juce::dsp::AudioBlock<float>(filterBuffers[2]);
     
     auto fb0Ctx = juce::dsp::ProcessContextReplacing<float>(fb0Block);
     auto fb1Ctx = juce::dsp::ProcessContextReplacing<float>(fb1Block);
+    auto fb2Ctx = juce::dsp::ProcessContextReplacing<float>(fb2Block);
     
-    LP.process(fb0Ctx);
-    HP.process(fb1Ctx);
+    LP1.process(fb0Ctx);
+    AP2.process(fb0Ctx);
+    
+    HP1.process(fb1Ctx);
+    filterBuffers[2] = filterBuffers[1];
+    LP2.process(fb1Ctx);
+    
+    HP2.process(fb2Ctx);
     
     auto numSamples = buffer.getNumSamples();
     auto numChannels = buffer.getNumChannels();
     
+    if( compressorband.bypass->get() )
+        return;
+    
     buffer.clear();
-
 
     
     auto addFilterBand = [nc = numChannels, ns = numSamples](auto& inputBuffer, const auto& source)
@@ -238,6 +262,7 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     
     addFilterBand(buffer, filterBuffers[0]);
     addFilterBand(buffer, filterBuffers[1]);
+    addFilterBand(buffer, filterBuffers[2]);
 }
 
 //==============================================================================
@@ -292,7 +317,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
         sa.add( juce::String(choice, 1) );
     };
     
-    auto crossoverFreqRange = juce::NormalisableRange<float>(20, 20000, 1, 1);
+    auto LOW_MID_crossoverFreqRange = juce::NormalisableRange<float>(20, 999, 1, 1);
+    auto MID_HIGH_crossoverFreqRange = juce::NormalisableRange<float>(1000, 20000, 1, 1);
 
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_LOW_BAND_ID, THRESHOLD_LOW_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_LOW_BAND_ID, ATTACK_LOW_BAND_NAME, attackReleaseRange, 0));
@@ -300,7 +326,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_LOW_BAND_ID, RATIO_LOW_BAND_NAME, sa, 3));
     vecParams.push_back(std::make_unique<juce::AudioParameterBool>( BYPASS_LOW_BAND_ID, BYPASS_LOW_BAND_NAME, false));
     
-    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(LOW_MID_CROSSOVER_FREQ_ID, LOW_MID_CROSSOVER_FREQ_NAME, crossoverFreqRange , 500 ));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(LOW_MID_CROSSOVER_FREQ_ID, LOW_MID_CROSSOVER_FREQ_NAME, LOW_MID_crossoverFreqRange , 400 ));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(MID_HIGH_CROSSOVER_FREQ_ID, MID_HIGH_CROSSOVER_FREQ_NAME, MID_HIGH_crossoverFreqRange , 2000 ));
 //
 //    // Loop over this vector and add the resp. parameterIDs to the parameterlist stringArray
 //    for (const auto& param : vecParams){
