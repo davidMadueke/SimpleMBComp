@@ -156,7 +156,10 @@ public:
 private:
     //inline static juce::StringArray parameterList;
     
-    CompressorBand compressorband;
+    std::array<CompressorBand,3> compressorbands;
+    CompressorBand& lowBandComp = compressorbands[0];
+    CompressorBand& midBandComp = compressorbands[1];
+    CompressorBand& highBandComp = compressorbands[2];
     
     using Filter = juce::dsp::LinkwitzRileyFilter<float>;
     
