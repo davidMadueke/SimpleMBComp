@@ -154,8 +154,22 @@ public:
     
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, "Parameters", createParameterLayout()};
 private:
+    //inline static juce::StringArray parameterList;
     
     CompressorBand compressorband;
+    
+    using Filter = juce::dsp::LinkwitzRileyFilter<float>;
+    
+    Filter LP1, AP2,    // Set LP1 to LowMidCutoff and AP2 to MidHighCutoff
+            HP1, LP2, //Set HP1 to LowMidCutoff
+                HP2;    // Set HP2 and LP2 to MidHighCutoff
+    
+    juce::AudioParameterFloat* lowMidCrossover { nullptr };
+    
+    juce::AudioParameterFloat* midHighCrossover { nullptr };
+    
+    std::array<juce::AudioBuffer<float>,3> filterBuffers;
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleMBCompAudioProcessor)
 };
