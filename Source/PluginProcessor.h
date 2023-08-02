@@ -27,6 +27,8 @@ struct CompressorBand
     juce::AudioParameterFloat* release { nullptr };
     juce::AudioParameterChoice* ratio { nullptr };
     juce::AudioParameterBool* bypass { nullptr };
+    juce::AudioParameterBool* solo { nullptr };
+    juce::AudioParameterBool* mute { nullptr };
     
     void prepare(const juce::dsp::ProcessSpec& spec)
     {
@@ -84,7 +86,15 @@ public:
             
             BYPASS_LOW_BAND_NAME = "Bypass Low Band",
             BYPASS_MID_BAND_NAME = "Bypass Mid Band",
-            BYPASS_HIGH_BAND_NAME = "Bypass High Band"
+            BYPASS_HIGH_BAND_NAME = "Bypass High Band",
+    
+            MUTE_LOW_BAND_NAME = "Mute Low Band",
+            MUTE_MID_BAND_NAME = "Mute Mid Band",
+            MUTE_HIGH_BAND_NAME = "Mute High Band",
+            
+            SOLO_LOW_BAND_NAME = "Solo Low Band",
+            SOLO_MID_BAND_NAME = "Solo Mid Band",
+            SOLO_HIGH_BAND_NAME = "Solo High Band"
     ;
 
 
@@ -110,7 +120,15 @@ public:
             
             BYPASS_LOW_BAND_ID= {"Bypass_Low_Band", 1},
             BYPASS_MID_BAND_ID= {"Bypass_Mid_Band",1},
-            BYPASS_HIGH_BAND_ID= {"Bypass_High_Band", 1}
+            BYPASS_HIGH_BAND_ID= {"Bypass_High_Band", 1},
+    
+            MUTE_LOW_BAND_ID= {"Mute_Low_Band", 1},
+            MUTE_MID_BAND_ID= {"Mute_Mid_Band",1},
+            MUTE_HIGH_BAND_ID= {"Mute_High_Band", 1},
+    
+            SOLO_LOW_BAND_ID= {"Solo_Low_Band", 1},
+            SOLO_MID_BAND_ID= {"Solo_Mid_Band",1},
+            SOLO_HIGH_BAND_ID= {"Solo_High_Band", 1}
        ;
     //==============================================================================
     SimpleMBCompAudioProcessor();

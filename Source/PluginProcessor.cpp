@@ -65,6 +65,8 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
     choiceHelper(lowBandComp.ratio, SimpleMBCompAudioProcessor::RATIO_LOW_BAND_ID.getParamID() );
     
     boolHelper(lowBandComp.bypass, SimpleMBCompAudioProcessor::BYPASS_LOW_BAND_ID.getParamID() );
+    boolHelper(lowBandComp.solo, SimpleMBCompAudioProcessor::SOLO_LOW_BAND_ID.getParamID() );
+    boolHelper(lowBandComp.mute, SimpleMBCompAudioProcessor::MUTE_LOW_BAND_ID.getParamID() );
     
     //Compressor mid Band
     floatHelper(midBandComp.attack, SimpleMBCompAudioProcessor::ATTACK_MID_BAND_ID.getParamID() );
@@ -74,6 +76,8 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
     choiceHelper(midBandComp.ratio, SimpleMBCompAudioProcessor::RATIO_MID_BAND_ID.getParamID() );
     
     boolHelper(midBandComp.bypass, SimpleMBCompAudioProcessor::BYPASS_MID_BAND_ID.getParamID() );
+    boolHelper(midBandComp.solo, SimpleMBCompAudioProcessor::SOLO_MID_BAND_ID.getParamID() );
+    boolHelper(midBandComp.mute, SimpleMBCompAudioProcessor::MUTE_MID_BAND_ID.getParamID() );
     
     //Compressor high Band
     floatHelper(highBandComp.attack, SimpleMBCompAudioProcessor::ATTACK_HIGH_BAND_ID.getParamID() );
@@ -83,6 +87,8 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
     choiceHelper(highBandComp.ratio, SimpleMBCompAudioProcessor::RATIO_HIGH_BAND_ID.getParamID() );
     
     boolHelper(highBandComp.bypass, SimpleMBCompAudioProcessor::BYPASS_HIGH_BAND_ID.getParamID() );
+    boolHelper(highBandComp.solo, SimpleMBCompAudioProcessor::SOLO_HIGH_BAND_ID.getParamID() );
+    boolHelper(highBandComp.mute, SimpleMBCompAudioProcessor::MUTE_HIGH_BAND_ID.getParamID() );
     
 
 
@@ -280,7 +286,18 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     
     buffer.clear();
-
+    
+    auto CompBandsAreSoloed = false;
+    for(auto& comp: compressorbands)
+    {
+      if( comp.solo->get() )
+      {
+          CompBandsAreSoloed = true;
+          break;
+      };
+        
+    };
+    
     
     auto addFilterBand = [nc = numChannels, ns = numSamples](auto& inputBuffer, const auto& source)
     {
@@ -291,9 +308,27 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         };
     };
     
-    addFilterBand(buffer, filterBuffers[0]);
-    addFilterBand(buffer, filterBuffers[1]);
-    addFilterBand(buffer, filterBuffers[2]);
+    if(CompBandsAreSoloed)
+    {
+        for(size_t i = 0; i < compressorbands.size() ; ++i )
+        {
+            auto& comp = compressorbands[i];
+          if(comp.solo->get() )
+              addFilterBand(buffer, filterBuffers[i]);
+        };
+    }
+    else{
+        for(size_t i = 0; i < compressorbands.size() ; ++i )
+        {
+            auto& comp = compressorbands[i];
+          if(comp.mute->get() == false )
+              addFilterBand(buffer, filterBuffers[i]);
+        };
+    }
+    
+//    addFilterBand(buffer, filterBuffers[0]);
+//    addFilterBand(buffer, filterBuffers[1]);
+//    addFilterBand(buffer, filterBuffers[2]);
 }
 
 //==============================================================================
@@ -358,6 +393,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_LOW_BAND_ID, RATIO_LOW_BAND_NAME, sa, 3));
     vecParams.push_back(std::make_unique<juce::AudioParameterBool>( BYPASS_LOW_BAND_ID, BYPASS_LOW_BAND_NAME, false));
     
+    vecParams.push_back(std::make_unique<juce::AudioParameterBool>( SOLO_LOW_BAND_ID, SOLO_LOW_BAND_NAME, false));
+    vecParams.push_back(std::make_unique<juce::AudioParameterBool>( MUTE_LOW_BAND_ID, MUTE_LOW_BAND_NAME, false));
+    
     // Mid Band Compressor
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_MID_BAND_ID, THRESHOLD_MID_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_MID_BAND_ID, ATTACK_MID_BAND_NAME, attackReleaseRange, 0));
@@ -365,12 +403,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_MID_BAND_ID, RATIO_MID_BAND_NAME, sa, 3));
     vecParams.push_back(std::make_unique<juce::AudioParameterBool>( BYPASS_MID_BAND_ID, BYPASS_MID_BAND_NAME, false));
     
+    vecParams.push_back(std::make_unique<juce::AudioParameterBool>( SOLO_MID_BAND_ID, SOLO_MID_BAND_NAME, false));
+    vecParams.push_back(std::make_unique<juce::AudioParameterBool>( MUTE_MID_BAND_ID, MUTE_MID_BAND_NAME, false));
+    
     // High Band Compressor
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_HIGH_BAND_ID, THRESHOLD_HIGH_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_HIGH_BAND_ID, ATTACK_HIGH_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(RELEASE_HIGH_BAND_ID, RELEASE_HIGH_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_HIGH_BAND_ID, RATIO_HIGH_BAND_NAME, sa, 3));
+    
     vecParams.push_back(std::make_unique<juce::AudioParameterBool>( BYPASS_HIGH_BAND_ID, BYPASS_HIGH_BAND_NAME, false));
+    vecParams.push_back(std::make_unique<juce::AudioParameterBool>( SOLO_HIGH_BAND_ID, SOLO_HIGH_BAND_NAME, false));
+    vecParams.push_back(std::make_unique<juce::AudioParameterBool>( MUTE_HIGH_BAND_ID, MUTE_HIGH_BAND_NAME, false));
     
     //Crossover Freq Parameters
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(LOW_MID_CROSSOVER_FREQ_ID, LOW_MID_CROSSOVER_FREQ_NAME, LOW_MID_crossoverFreqRange , 400 ));
