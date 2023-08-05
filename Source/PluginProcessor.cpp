@@ -45,7 +45,11 @@ SimpleMBCompAudioProcessor::SimpleMBCompAudioProcessor()
     };
 
     // Using the parameterList StringArray, apply the float helper functions
-
+    
+    // Input and output Gain
+    floatHelper(inputGainParam, SimpleMBCompAudioProcessor::GAIN_IN_ID.getParamID());
+    floatHelper(outputGainParam, SimpleMBCompAudioProcessor::GAIN_OUT_ID.getParamID());
+    
     //Crossover Frequencies
     floatHelper(lowMidCrossover, SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID.getParamID() );
     floatHelper(midHighCrossover, SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID.getParamID() );
@@ -170,6 +174,12 @@ void SimpleMBCompAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     spec.numChannels = getTotalNumOutputChannels();
     spec.sampleRate = sampleRate;
     
+    inputGain.prepare(spec);
+    outputGain.prepare(spec);
+    
+    inputGain.setRampDurationSeconds(0.05); //50 ms
+    outputGain.setRampDurationSeconds(0.05); //50 ms
+    
     for (auto& comp : compressorbands)
         comp.prepare(spec);
     
@@ -182,7 +192,7 @@ void SimpleMBCompAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     for( auto& buffer : filterBuffers)
     {
         buffer.setSize(spec.numChannels, samplesPerBlock);
-    }
+    };
 }
 
 void SimpleMBCompAudioProcessor::releaseResources()
@@ -231,6 +241,11 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+    
+    inputGain.setGainDecibels(inputGainParam->get() );
+    outputGain.setGainDecibels(outputGainParam->get());
+    
+    processGain(buffer, inputGain);
     
     for(auto& comp : compressorbands)
     {
@@ -325,6 +340,7 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
               addFilterBand(buffer, filterBuffers[i]);
         };
     }
+    processGain(buffer, outputGain);
     
 //    addFilterBand(buffer, filterBuffers[0]);
 //    addFilterBand(buffer, filterBuffers[1]);
@@ -373,7 +389,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     
     // Create a std::vector with a ranged audio parameter template and add all of the unique pointers to it
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> vecParams;
-
+    
+    auto gainRange = juce::NormalisableRange<float>(-24.f, 24.f, 0.5f, 1.f);
+    
     auto attackReleaseRange =  juce::NormalisableRange<float>(5, 500, 1, 1); // Set the attack Release range to a minimal time of 5ms and maximal range of 500ms with a linear step with a skew factor 1
 
     auto ratioChoices = std::vector<double>{1, 1.5, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20, 50, 100};
@@ -385,7 +403,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     
     auto LOW_MID_crossoverFreqRange = juce::NormalisableRange<float>(20, 999, 1, 1);
     auto MID_HIGH_crossoverFreqRange = juce::NormalisableRange<float>(1000, 20000, 1, 1);
-
+    
+    // Input and Output Gain
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(GAIN_IN_ID, GAIN_IN_NAME, gainRange, 0));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(GAIN_OUT_ID, GAIN_OUT_NAME, gainRange, 0));
+    
+    
     //Low Band Compressor
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_LOW_BAND_ID, THRESHOLD_LOW_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_LOW_BAND_ID, ATTACK_LOW_BAND_NAME, attackReleaseRange, 0));
