@@ -94,7 +94,10 @@ public:
             
             SOLO_LOW_BAND_NAME = "Solo Low Band",
             SOLO_MID_BAND_NAME = "Solo Mid Band",
-            SOLO_HIGH_BAND_NAME = "Solo High Band"
+            SOLO_HIGH_BAND_NAME = "Solo High Band",
+    
+            GAIN_IN_NAME = "Input Gain",
+            GAIN_OUT_NAME = "Output Gain"
     ;
 
 
@@ -128,7 +131,10 @@ public:
     
             SOLO_LOW_BAND_ID= {"Solo_Low_Band", 1},
             SOLO_MID_BAND_ID= {"Solo_Mid_Band",1},
-            SOLO_HIGH_BAND_ID= {"Solo_High_Band", 1}
+            SOLO_HIGH_BAND_ID= {"Solo_High_Band", 1},
+    
+            GAIN_IN_ID= {"Input_Gain",1},
+            GAIN_OUT_ID= {"Output_Gain", 1}
        ;
     //==============================================================================
     SimpleMBCompAudioProcessor();
@@ -190,6 +196,19 @@ private:
     juce::AudioParameterFloat* midHighCrossover { nullptr };
     
     std::array<juce::AudioBuffer<float>,3> filterBuffers;
+    
+    juce::dsp::Gain<float> inputGain, outputGain;
+    
+    juce::AudioParameterFloat* inputGainParam { nullptr };
+    juce::AudioParameterFloat* outputGainParam { nullptr };
+    
+    template<typename T, typename U>
+    void processGain(T& buffer, U& gain)
+    {
+        auto block = juce::dsp::AudioBlock<float>(buffer);
+        auto context = juce::dsp::ProcessContextReplacing<float>(block);
+        gain.process(context);
+    };
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleMBCompAudioProcessor)
