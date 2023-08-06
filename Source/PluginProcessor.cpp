@@ -227,6 +227,28 @@ bool SimpleMBCompAudioProcessor::isBusesLayoutSupported (const BusesLayout& layo
 }
 #endif
 
+void SimpleMBCompAudioProcessor::updateState()
+{
+    inputGain.setGainDecibels(inputGainParam->get() );
+    outputGain.setGainDecibels(outputGainParam->get());
+    
+    for(auto& comp : compressorbands)
+    {
+        comp.updateCompressorSettings();
+        
+    };
+    
+    auto lowMidCutoff = lowMidCrossover->get();
+    auto midHighCutoff = midHighCrossover->get();
+    
+    LP1.setCutoffFrequency(lowMidCutoff);
+    AP2.setCutoffFrequency(midHighCutoff);
+    
+    HP1.setCutoffFrequency(lowMidCutoff);
+    LP2.setCutoffFrequency(midHighCutoff);
+    HP2.setCutoffFrequency(midHighCutoff);
+};
+
 void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -242,33 +264,16 @@ void SimpleMBCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
-    inputGain.setGainDecibels(inputGainParam->get() );
-    outputGain.setGainDecibels(outputGainParam->get());
+    updateState();
     
     processGain(buffer, inputGain);
     
-    for(auto& comp : compressorbands)
-    {
-        comp.updateCompressorSettings();
-        
-    }
-
     
     for(auto& fb : filterBuffers )
     {
         fb = buffer;
         
     }
-    
-    auto lowMidCutoff = lowMidCrossover->get();
-    auto midHighCutoff = midHighCrossover->get();
-    
-    LP1.setCutoffFrequency(lowMidCutoff);
-    AP2.setCutoffFrequency(midHighCutoff);
-    
-    HP1.setCutoffFrequency(lowMidCutoff);
-    LP2.setCutoffFrequency(midHighCutoff);
-    HP2.setCutoffFrequency(midHighCutoff);
     
     auto fb0Block = juce::dsp::AudioBlock<float>(filterBuffers[0]);
     auto fb1Block = juce::dsp::AudioBlock<float>(filterBuffers[1]);
