@@ -392,6 +392,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     
     auto gainRange = juce::NormalisableRange<float>(-24.f, 24.f, 0.5f, 1.f);
     
+    juce::NormalisableRange<float> thresholdRange = juce::NormalisableRange<float>(-60, +12, 1, 1);
+    
     auto attackReleaseRange =  juce::NormalisableRange<float>(5, 500, 1, 1); // Set the attack Release range to a minimal time of 5ms and maximal range of 500ms with a linear step with a skew factor 1
 
     auto ratioChoices = std::vector<double>{1, 1.5, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20, 50, 100};
@@ -410,7 +412,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     
     
     //Low Band Compressor
-    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_LOW_BAND_ID, THRESHOLD_LOW_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_LOW_BAND_ID, THRESHOLD_LOW_BAND_NAME, thresholdRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_LOW_BAND_ID, ATTACK_LOW_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(RELEASE_LOW_BAND_ID, RELEASE_LOW_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_LOW_BAND_ID, RATIO_LOW_BAND_NAME, sa, 3));
@@ -420,7 +422,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     vecParams.push_back(std::make_unique<juce::AudioParameterBool>( MUTE_LOW_BAND_ID, MUTE_LOW_BAND_NAME, false));
     
     // Mid Band Compressor
-    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_MID_BAND_ID, THRESHOLD_MID_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_MID_BAND_ID, THRESHOLD_MID_BAND_NAME, thresholdRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_MID_BAND_ID, ATTACK_MID_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(RELEASE_MID_BAND_ID, RELEASE_MID_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_MID_BAND_ID, RATIO_MID_BAND_NAME, sa, 3));
@@ -430,7 +432,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SimpleMBCompAudioProcessor::
     vecParams.push_back(std::make_unique<juce::AudioParameterBool>( MUTE_MID_BAND_ID, MUTE_MID_BAND_NAME, false));
     
     // High Band Compressor
-    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_HIGH_BAND_ID, THRESHOLD_HIGH_BAND_NAME, juce::NormalisableRange<float>(-60, +12, 1, 1), 0));
+    vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(THRESHOLD_HIGH_BAND_ID, THRESHOLD_HIGH_BAND_NAME, thresholdRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(ATTACK_HIGH_BAND_ID, ATTACK_HIGH_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterFloat>(RELEASE_HIGH_BAND_ID, RELEASE_HIGH_BAND_NAME, attackReleaseRange, 0));
     vecParams.push_back(std::make_unique<juce::AudioParameterChoice>(RATIO_HIGH_BAND_ID, RATIO_HIGH_BAND_NAME, sa, 3));
