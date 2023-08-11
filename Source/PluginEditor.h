@@ -107,9 +107,39 @@ struct AnalyzerButton : juce::ToggleButton
     juce::Path randomPath;
 };
 
+struct RotarySlider : juce::Slider
+{
+    RotarySlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox )
+    {};
+};
+
+template<
+typename Attachment,
+typename APVTS,
+typename ParamID,
+typename SliderType
+>
+void makeAttachment(std::unique_ptr<Attachment>& attachment, APVTS& apvts, const ParamID& param, SliderType& slider )
+{
+    attachment = std::make_unique<Attachment>(apvts,param.getParamID(), slider);
+};
+
 struct GlobalControls : juce::Component
 {
+    GlobalControls(juce::AudioProcessorValueTreeState& apvts);
+    
     void paint(juce::Graphics& g) override;
+    
+    void resized() override;
+    
+private:
+    RotarySlider inGainSlider, outGainSlider, lowMidXoverSlider, midHighXoverSlider;
+    
+    using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    std::unique_ptr<Attachment> lowMidXoverSliderAttachment,
+                                midHighXoverSliderAttachment,
+                                inGainSliderAttachment,
+                                outGainSliderAttachment;
 };
 
 class SimpleMBCompAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -129,7 +159,7 @@ private:
     
     Placeholder controlBar, analyzer, /*globalControls,*/ bandControls;
     
-    GlobalControls globalControls;
+    GlobalControls globalControls { audioProcessor.apvts };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleMBCompAudioProcessorEditor)
 };

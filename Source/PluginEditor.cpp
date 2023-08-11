@@ -229,6 +229,23 @@ juce::String RotarySliderWithLabels::getDisplayString() const
 }
 
 //==============================================================================
+GlobalControls::GlobalControls(juce::AudioProcessorValueTreeState& apvts)
+{
+    auto makeAttachmentHelper = [&apvts](auto& attachment, const auto& param, auto& slider)
+    {
+        makeAttachment(attachment, apvts, param, slider);
+    };
+    
+    addAndMakeVisible(inGainSlider);
+    addAndMakeVisible(outGainSlider);
+    addAndMakeVisible(lowMidXoverSlider);
+    addAndMakeVisible(midHighXoverSlider);
+    
+    makeAttachmentHelper(inGainSliderAttachment, SimpleMBCompAudioProcessor::GAIN_IN_ID, inGainSlider);
+    makeAttachmentHelper(outGainSliderAttachment, SimpleMBCompAudioProcessor::GAIN_OUT_ID, outGainSlider);
+    makeAttachmentHelper(lowMidXoverSliderAttachment,   SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID, lowMidXoverSlider);
+    makeAttachmentHelper(midHighXoverSliderAttachment, SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID, midHighXoverSlider);
+};
 void GlobalControls::paint(juce::Graphics& g)
 {
     using namespace juce;
@@ -244,6 +261,23 @@ void GlobalControls::paint(juce::Graphics& g)
     g.fillRoundedRectangle(bounds.toFloat(), 3.f);
     
     g.drawRect(localBounds);
+};
+
+void GlobalControls::resized()
+{
+    auto bounds = getLocalBounds();
+    using namespace juce;
+    
+    FlexBox flexBox;
+    flexBox.flexDirection = FlexBox::Direction::row;
+    flexBox.flexWrap = FlexBox::Wrap::noWrap;
+    
+    flexBox.items.add(FlexItem(inGainSlider).withFlex(1.f));
+    flexBox.items.add(FlexItem(outGainSlider).withFlex(1.f));
+    flexBox.items.add(FlexItem(lowMidXoverSlider).withFlex(1.f));
+    flexBox.items.add(FlexItem(midHighXoverSlider).withFlex(1.f));
+    
+    flexBox.performLayout(bounds);
 };
 //==============================================================================
 SimpleMBCompAudioProcessorEditor::SimpleMBCompAudioProcessorEditor (SimpleMBCompAudioProcessor& p)
