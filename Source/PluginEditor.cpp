@@ -9,6 +9,37 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+template<typename T>
+bool truncateKiloValue(T& value)
+{
+    if(value > static_cast<T>(999))
+    {
+        value /= static_cast<T>(1000);
+        return true;
+        
+    }
+    
+    return false;
+};
+
+juce::String getValString(const juce::RangedAudioParameter& param, bool getLow, juce::String suffix)
+{
+    juce::String str;
+    
+    auto val = (getLow) ? param.getNormalisableRange().start : param.getNormalisableRange().end;
+    
+    bool useK = truncateKiloValue(val);
+    
+    str << val;
+    
+    if(useK)
+        str << "k";
+    
+    str << suffix;
+    
+    return str;
+};
+//==============================================================================
 void LookAndFeel::drawRotarySlider(juce::Graphics & g,
                                    int x,
                                    int y,
@@ -203,11 +234,7 @@ juce::String RotarySliderWithLabels::getDisplayString() const
     {
         float val = getValue();
         
-        if( val > 999.f )
-        {
-            val /= 1000.f; //1001 / 1000 = 1.001
-            addK = true;
-        }
+        addK = truncateKiloValue(val);
         
         str = juce::String(val, (addK ? 2 : 0));
     }
@@ -231,20 +258,36 @@ juce::String RotarySliderWithLabels::getDisplayString() const
 //==============================================================================
 GlobalControls::GlobalControls(juce::AudioProcessorValueTreeState& apvts)
 {
+    
+    auto getParameterHelper = [&apvts](const auto& param) -> auto&
+    {
+        return getParam(apvts, param);
+    };
+    
+    inGainSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::GAIN_IN_ID), "dB");
+    outGainSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::GAIN_OUT_ID), "dB");
+    lowMidXoverSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID), "Hz");
+    midHighXoverSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID), "Hz");
+    
     auto makeAttachmentHelper = [&apvts](auto& attachment, const auto& param, auto& slider)
     {
         makeAttachment(attachment, apvts, param, slider);
     };
     
-    addAndMakeVisible(inGainSlider);
-    addAndMakeVisible(outGainSlider);
-    addAndMakeVisible(lowMidXoverSlider);
-    addAndMakeVisible(midHighXoverSlider);
+    addLabelPairs(inGainSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::GAIN_IN_ID), "dB");
+    addLabelPairs(lowMidXoverSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID), "Hz");
+    addLabelPairs(midHighXoverSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID), "Hz");
+    addLabelPairs(outGainSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::GAIN_OUT_ID), "dB");
     
-    makeAttachmentHelper(inGainSliderAttachment, SimpleMBCompAudioProcessor::GAIN_IN_ID, inGainSlider);
-    makeAttachmentHelper(outGainSliderAttachment, SimpleMBCompAudioProcessor::GAIN_OUT_ID, outGainSlider);
-    makeAttachmentHelper(lowMidXoverSliderAttachment,   SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID, lowMidXoverSlider);
-    makeAttachmentHelper(midHighXoverSliderAttachment, SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID, midHighXoverSlider);
+    addAndMakeVisible(*inGainSlider);
+    addAndMakeVisible(*lowMidXoverSlider);
+    addAndMakeVisible(*midHighXoverSlider);
+    addAndMakeVisible(*outGainSlider);
+    
+    makeAttachmentHelper(inGainSliderAttachment, SimpleMBCompAudioProcessor::GAIN_IN_ID, *inGainSlider);
+    makeAttachmentHelper(outGainSliderAttachment, SimpleMBCompAudioProcessor::GAIN_OUT_ID, *outGainSlider);
+    makeAttachmentHelper(lowMidXoverSliderAttachment,   SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID, *lowMidXoverSlider);
+    makeAttachmentHelper(midHighXoverSliderAttachment, SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID, *midHighXoverSlider);
 };
 void GlobalControls::paint(juce::Graphics& g)
 {
@@ -265,17 +308,25 @@ void GlobalControls::paint(juce::Graphics& g)
 
 void GlobalControls::resized()
 {
-    auto bounds = getLocalBounds();
+    auto bounds = getLocalBounds().reduced(5);
     using namespace juce;
     
     FlexBox flexBox;
     flexBox.flexDirection = FlexBox::Direction::row;
     flexBox.flexWrap = FlexBox::Wrap::noWrap;
     
-    flexBox.items.add(FlexItem(inGainSlider).withFlex(1.f));
-    flexBox.items.add(FlexItem(outGainSlider).withFlex(1.f));
-    flexBox.items.add(FlexItem(lowMidXoverSlider).withFlex(1.f));
-    flexBox.items.add(FlexItem(midHighXoverSlider).withFlex(1.f));
+    auto spacer = FlexItem().withWidth(4);
+    auto endCap = FlexItem().withWidth(6);
+    
+    flexBox.items.add(endCap);
+    flexBox.items.add(FlexItem(*inGainSlider).withFlex(1.f));
+    flexBox.items.add(spacer);
+    flexBox.items.add(FlexItem(*lowMidXoverSlider).withFlex(1.f));
+    flexBox.items.add(spacer);
+    flexBox.items.add(FlexItem(*midHighXoverSlider).withFlex(1.f));
+    flexBox.items.add(spacer);
+    flexBox.items.add(FlexItem(*outGainSlider).withFlex(1.f));
+    flexBox.items.add(endCap);
     
     flexBox.performLayout(bounds);
 };
