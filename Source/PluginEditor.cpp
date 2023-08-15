@@ -163,6 +163,14 @@ void RotarySliderWithLabels::paint(juce::Graphics &g)
     
     auto sliderBounds = getSliderBounds();
     
+    auto bounds = getLocalBounds();
+    
+    g.setColour(Colours::blueviolet);
+    g.drawFittedText(getName(),
+                     bounds.removeFromTop(getTextHeight() + 2),
+                     Justification::centred,
+                     1);
+    
 //    g.setColour(Colours::red);
 //    g.drawRect(getLocalBounds());
 //    g.setColour(Colours::yellow);
@@ -210,13 +218,15 @@ juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const
 {
     auto bounds = getLocalBounds();
     
+    bounds.removeFromTop(getTextHeight()*1.5);
+    
     auto size = juce::jmin(bounds.getWidth(), bounds.getHeight());
     
-    size -= getTextHeight() * 2;
+    size -= getTextHeight() * 1.5;
     juce::Rectangle<int> r;
     r.setSize(size, size);
     r.setCentre(bounds.getCentreX(), 0);
-    r.setY(2);
+    r.setY(bounds.getY());
     
     return r;
     
@@ -264,20 +274,25 @@ GlobalControls::GlobalControls(juce::AudioProcessorValueTreeState& apvts)
         return getParam(apvts, param);
     };
     
-    inGainSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::GAIN_IN_ID), "dB");
-    outGainSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::GAIN_OUT_ID), "dB");
-    lowMidXoverSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID), "Hz");
-    midHighXoverSlider = std::make_unique<RotarySliderWithLabels>(getParameterHelper(SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID), "Hz");
+    auto& gainInParam = getParameterHelper(SimpleMBCompAudioProcessor::GAIN_IN_ID);
+    auto& gainOutParam = getParameterHelper(SimpleMBCompAudioProcessor::GAIN_OUT_ID);
+    auto& lowMidParam = getParameterHelper(SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID);
+    auto& midHighParam = getParameterHelper(SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID);
+    
+    inGainSlider = std::make_unique<RotarySliderWithLabels>(gainInParam, "dB", "INPUT TRIM");
+    outGainSlider = std::make_unique<RotarySliderWithLabels>(gainOutParam, "dB", "OUTPUT TRIM");
+    lowMidXoverSlider = std::make_unique<RotarySliderWithLabels>(lowMidParam, "Hz", "LOW-MID X-OVER");
+    midHighXoverSlider = std::make_unique<RotarySliderWithLabels>(midHighParam, "Hz", "MID_HIGH X-OVER");
     
     auto makeAttachmentHelper = [&apvts](auto& attachment, const auto& param, auto& slider)
     {
         makeAttachment(attachment, apvts, param, slider);
     };
     
-    addLabelPairs(inGainSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::GAIN_IN_ID), "dB");
-    addLabelPairs(lowMidXoverSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::LOW_MID_CROSSOVER_FREQ_ID), "Hz");
-    addLabelPairs(midHighXoverSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::MID_HIGH_CROSSOVER_FREQ_ID), "Hz");
-    addLabelPairs(outGainSlider->labels, getParameterHelper(SimpleMBCompAudioProcessor::GAIN_OUT_ID), "dB");
+    addLabelPairs(inGainSlider->labels, gainInParam, "dB");
+    addLabelPairs(lowMidXoverSlider->labels, lowMidParam, "Hz");
+    addLabelPairs(midHighXoverSlider->labels, midHighParam, "Hz");
+    addLabelPairs(outGainSlider->labels, gainOutParam, "dB");
     
     addAndMakeVisible(*inGainSlider);
     addAndMakeVisible(*lowMidXoverSlider);
