@@ -16,6 +16,8 @@
 */
 juce::String getValString(const juce::RangedAudioParameter& param, bool getLow, juce::String suffix);
 
+//==============================================================================
+
 struct Placeholder : juce::Component
 {
     Placeholder()
@@ -46,6 +48,7 @@ struct LookAndFeel : juce::LookAndFeel_V4
                            bool shouldDrawButtonAsHighlighted,
                            bool shouldDrawButtonAsDown) override;
 };
+//==============================================================================
 
 struct RotarySliderWithLabels : juce::Slider
 {
@@ -84,6 +87,7 @@ private:
     juce::RangedAudioParameter* param;
     juce::String suffix;
 };
+//==============================================================================
 
 struct PowerButton : juce::ToggleButton { };
 
@@ -110,13 +114,14 @@ struct AnalyzerButton : juce::ToggleButton
     
     juce::Path randomPath;
 };
+//==============================================================================
 
 struct RotarySlider : juce::Slider
 {
     RotarySlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox )
     {};
 };
-
+//==============================================================================
 template<
 typename Attachment,
 typename APVTS,
@@ -151,6 +156,7 @@ void addLabelPairs(Labels& labels, const ParamType& param, const SuffixType& suf
     labels.add({1.f,getValString(param, false, suffix)});
 };
 
+//==============================================================================
 struct GlobalControls : juce::Component
 {
     GlobalControls(juce::AudioProcessorValueTreeState& apvts);
@@ -169,6 +175,7 @@ private:
                                 inGainSliderAttachment,
                                 outGainSliderAttachment;
 };
+//==============================================================================
 
 class SimpleMBCompAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
@@ -176,7 +183,6 @@ public:
     SimpleMBCompAudioProcessorEditor (SimpleMBCompAudioProcessor&);
     ~SimpleMBCompAudioProcessorEditor() override;
 
-    //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
 
