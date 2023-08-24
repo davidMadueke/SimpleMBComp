@@ -149,6 +149,24 @@ void LookAndFeel::drawToggleButton(juce::Graphics &g,
         
         g.strokePath(analyzerButton->randomPath, PathStrokeType(1.f));
     }
+    
+    else
+    {
+        auto bounds = toggleButton.getLocalBounds().reduced(2);
+        
+        auto buttonIsOn = toggleButton.getToggleState();
+        
+        const int cornerSize = 4;
+        
+        g.setColour(buttonIsOn ? juce::Colours::white : juce::Colours::black);
+        g.fillRoundedRectangle(bounds.toFloat(), cornerSize);
+        
+        g.setColour(buttonIsOn ? juce::Colours::black : juce::Colours::white);
+        g.drawRoundedRectangle(bounds.toFloat(), cornerSize, 1);
+        
+        g.drawFittedText(toggleButton.getName(), bounds, juce::Justification::centred, 1);
+        
+    }
 }
 
 //==============================================================================
@@ -299,6 +317,26 @@ ratioSlider(nullptr, "")
     addAndMakeVisible(thresholdSlider);
     addAndMakeVisible(ratioSlider);
     
+    bypassButton.setName("X");
+    soloButton.setName("S");
+    muteButton.setName("M");
+    
+    addAndMakeVisible(bypassButton);
+    addAndMakeVisible(soloButton);
+    addAndMakeVisible(muteButton);
+    
+    lowBandButton.setName(" LOW ");
+    midBandButton.setName(" MID ");
+    highBandButton.setName(" HIGH ");
+    
+    lowBandButton.setRadioGroupId(1);
+    midBandButton.setRadioGroupId(1);
+    highBandButton.setRadioGroupId(1);
+
+    addAndMakeVisible(lowBandButton);
+    addAndMakeVisible(midBandButton);
+    addAndMakeVisible(highBandButton);
+    
     auto getParameterHelper = [&apvts= this->apvts](const auto& param) -> auto&
     {
         return getParam(apvts, param);
@@ -330,12 +368,36 @@ ratioSlider(nullptr, "")
     makeAttachmentHelper(releaseSliderAttachment, SimpleMBCompAudioProcessor::RELEASE_MID_BAND_ID, releaseSlider);
     makeAttachmentHelper(thresholdSliderAttachment,   SimpleMBCompAudioProcessor::THRESHOLD_MID_BAND_ID, thresholdSlider);
     makeAttachmentHelper(ratioSliderAttachment, SimpleMBCompAudioProcessor::RATIO_MID_BAND_ID, ratioSlider);
+    
+    makeAttachmentHelper(bypassButtonAttachment, SimpleMBCompAudioProcessor::BYPASS_MID_BAND_ID, bypassButton);
+    makeAttachmentHelper(soloButtonAttachment, SimpleMBCompAudioProcessor::SOLO_MID_BAND_ID, soloButton);
+    makeAttachmentHelper(muteButtonAttachment, SimpleMBCompAudioProcessor::MUTE_MID_BAND_ID, muteButton);
 }
 
 void CompressorBandControls::resized()
 {
     auto bounds = getLocalBounds().reduced(5);
     using namespace juce;
+    
+    auto createBandButtonControlBox = [](std::vector<Component*> comps){
+        FlexBox flexBox;
+        flexBox.flexDirection = FlexBox::Direction::column;
+        flexBox.flexWrap = FlexBox::Wrap::noWrap;
+        
+        auto spacer = FlexItem().withHeight(2);
+        
+        for( auto* comp : comps )
+        {
+            flexBox.items.add(spacer);
+            flexBox.items.add(FlexItem(*comp).withFlex(1.f));
+            flexBox.items.add(spacer);
+        }
+        
+        return flexBox;
+    };
+    
+    auto bandButtonControlBox = createBandButtonControlBox({&bypassButton, &soloButton, &muteButton});
+    auto bandSelectControlBox = createBandButtonControlBox({&lowBandButton, &midBandButton, &highBandButton});
     
     FlexBox flexBox;
     flexBox.flexDirection = FlexBox::Direction::row;
@@ -345,6 +407,8 @@ void CompressorBandControls::resized()
     auto endCap = FlexItem().withWidth(6);
     
     flexBox.items.add(endCap);
+    flexBox.items.add(FlexItem(bandSelectControlBox).withWidth(44.f));
+    flexBox.items.add(spacer);
     flexBox.items.add(FlexItem(attackSlider).withFlex(1.f));
     flexBox.items.add(spacer);
     flexBox.items.add(FlexItem(releaseSlider).withFlex(1.f));
@@ -352,6 +416,9 @@ void CompressorBandControls::resized()
     flexBox.items.add(FlexItem(thresholdSlider).withFlex(1.f));
     flexBox.items.add(spacer);
     flexBox.items.add(FlexItem(ratioSlider).withFlex(1.f));
+    //flexBox.items.add(endCap);
+    flexBox.items.add(spacer);
+    flexBox.items.add(FlexItem(bandButtonControlBox).withWidth(30.f));
     flexBox.items.add(endCap);
     
     flexBox.performLayout(bounds);
