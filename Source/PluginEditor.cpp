@@ -465,7 +465,7 @@ GlobalControls::GlobalControls(juce::AudioProcessorValueTreeState& apvts)
     inGainSlider = std::make_unique<RotarySliderWithLabels>(&gainInParam, "dB", "INPUT TRIM");
     outGainSlider = std::make_unique<RotarySliderWithLabels>(&gainOutParam, "dB", "OUTPUT TRIM");
     lowMidXoverSlider = std::make_unique<RotarySliderWithLabels>(&lowMidParam, "Hz", "LOW-MID X-OVER");
-    midHighXoverSlider = std::make_unique<RotarySliderWithLabels>(&midHighParam, "Hz", "MID_HIGH X-OVER");
+    midHighXoverSlider = std::make_unique<RotarySliderWithLabels>(&midHighParam, "Hz", "MID-HIGH X-OVER");
     
     auto makeAttachmentHelper = [&apvts](auto& attachment, const auto& param, auto& slider)
     {
