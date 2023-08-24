@@ -187,6 +187,15 @@ private:
                                 releaseSliderAttachment,
                                 thresholdSliderAttachment,
                                 ratioSliderAttachment;
+    
+    juce::ToggleButton bypassButton, soloButton, muteButton, lowBandButton, midBandButton, highBandButton;
+    
+    using buttonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
+    std::unique_ptr<buttonAttachment>   bypassButtonAttachment,
+                                        muteButtonAttachment,
+                                        soloButtonAttachment;
+
+    
 };
 
 //==============================================================================
